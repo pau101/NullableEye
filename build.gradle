@@ -10,22 +10,28 @@ buildscript {
 apply plugin: "net.minecraftforge.gradle.forge"
 
 ext.modVersion = "1.0.0"
-version = "${modVersion}-1.11.2"
-group = "com.pau101.nullableeye"
-archivesBaseName = "nullableeye"
+ext.loadingPlugin = "com.pau101.nullableeye.NullableEyeLoadingPlugin"
+ext.mappingsChannel = "snapshot"
+ext.mappingsVersion = "20161220"
+ext.modID = "nullableeye"
+version = "$modVersion-1.11.2"
+group = "com.pau101.$modID"
+archivesBaseName = "$modID"
 
 sourceCompatibility = targetCompatibility = JavaVersion.VERSION_1_8
 
 minecraft {
 	version = "1.11.2-13.20.0.2309"
 	runDir = "run"
-	mappings = "snapshot_20161220"
+	mappings = "${project.mappingsChannel}_${project.mappingsVersion}"
 	makeObfSourceJar = false
+	clientJvmArgs = [ "-Dfml.coreMods.load=$project.loadingPlugin" ]
+	serverJvmArgs = [ "-Dfml.coreMods.load=$project.loadingPlugin" ]
 }
 
 jar {
 	manifest {
-		attributes "FMLCorePlugin": "com.pau101.nullableeye.NullableEyeLoadingPlugin"
+		attributes "FMLCorePlugin": "$project.loadingPlugin"
 		attributes "FMLCorePluginContainsFMLMod": "true"
 	}
 }
@@ -41,3 +47,13 @@ processResources {
 		exclude "mcmod.info"
 	}
 }
+
+task generateMappings(type: Copy) {
+	from ("${System.properties["user.home"]}/.gradle/caches/minecraft/de/oceanlabs/key/mcp_$project.mappingsChannel/$project.mappingsVersion/$project.minecraft.version/srgs") {
+		include "srg-key.srg"
+	}
+	into "src/main/resources/assets/$project.modID"
+}
+
+compileJava.dependsOn generateMappings
+decompileMc.dependsOn generateMappings

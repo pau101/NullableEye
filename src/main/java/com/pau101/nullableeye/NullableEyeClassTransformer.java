@@ -1,6 +1,7 @@
 package com.pau101.nullableeye;
 
 import com.google.common.collect.ImmutableMap;
+import com.pau101.nullableeye.mappings.Mappings;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import org.apache.logging.log4j.LogManager;
@@ -18,7 +19,7 @@ import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import java.util.HashSet;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -27,6 +28,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 public final class NullableEyeClassTransformer implements IClassTransformer {
+	private static NullableEyeClassTransformer instance;
+
 	private static final String MINECRAFT_PACKAGE = "net.minecraft.";
 
 	private static final String MINECRAFT_PACKAGE_DESC = MINECRAFT_PACKAGE.replace('.', '/');
@@ -35,15 +38,25 @@ public final class NullableEyeClassTransformer implements IClassTransformer {
 
 	private static final String INSPECT_OWNER = Type.getInternalName(NullableEyeClassTransformer.class);
 
-	private static final String INSPECT_NAME = "inspect";
+	private static final String INSPECT_NAME = "inspectHook";
 
 	private static final String INSPECT_DESC = Type.getMethodDescriptor(Type.VOID_TYPE, Type.getType(Object.class), Type.getType(String.class));
 
-	private static final Map<String, Nullability> NULLABLITIES = new ConcurrentHashMap<>(4096);
+	private static final int INSPECTION_CALLER_IDX = 3;
 
-	private static final Set<String> REPORTED = new HashSet<>(1024);
+	private final Map<String, Nullability> nullablities = new ConcurrentHashMap<>(4096);
 
-	private static final Logger LOGGER = LogManager.getLogger(NullableEyeLoadingPlugin.NAME);
+	private final Set<String> reported = ConcurrentHashMap.newKeySet(1024);
+
+	private final Logger logger = LogManager.getLogger(NullableEyeLoadingPlugin.NAME);
+
+	private final Mappings srgMcpMappings = loadMappings();
+
+	public NullableEyeClassTransformer() {
+		if (instance == null) {
+			instance = this;
+		}
+	}
 
 	@Override
 	public byte[] transform(String name, String transformedName, byte[] bytes) {
@@ -80,38 +93,65 @@ public final class NullableEyeClassTransformer implements IClassTransformer {
 		return writer.toByteArray();
 	}
 
-	private static void recordNullability(ClassNode cls, MethodNode method) {
+	private void inspect(Object value, String method) {
+		if (reported.contains(method)) {
+			return;
+		}
+		Nullability nullability = nullablities.getOrDefault(method, Nullability.NONNULL);
+		if (!nullability.test(value)) {
+			StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+			nullability.report(srgMcpMappings.getMethod(method).getFullValue(), stackTrace.length > INSPECTION_CALLER_IDX ? toMcp(stackTrace[INSPECTION_CALLER_IDX]).toString() : "unknown");
+			reported.add(method);
+			nullablities.remove(method);
+		}
+	}
+
+	private StackTraceElement toMcp(StackTraceElement element) {
+		return srgMcpMappings.getMethods(element.getClassName().replace('.', '/'), element.getMethodName())
+			.stream()
+			.findFirst().map(methodDescriptor ->
+				new StackTraceElement(element.getClassName(), methodDescriptor.getValue(), element.getFileName(), element.getLineNumber())
+			).orElse(element);
+	}
+
+	private void recordNullability(ClassNode cls, MethodNode method) {
 		if (method.visibleAnnotations != null) {
 			for (AnnotationNode annotation : method.visibleAnnotations) {
 				Nullability n = Nullability.get(annotation.desc);
 				if (n != null) {
-					NULLABLITIES.put(getMethodId(cls.name, method.name, method.desc), n);
+					nullablities.put(getMethodId(cls.name, method.name, method.desc), n);
 					return;
 				}
 			}
 		}
 	}
 
-	private static String getMethodId(String className, String methodName, String methodDesc) {
-		return REMAPPER.map(className) + "#" + REMAPPER.mapMethodName(className, methodName, methodDesc) + REMAPPER.mapMethodDesc(methodDesc);
+	private String getMethodId(String className, String methodName, String methodDesc) {
+		return REMAPPER.map(className) + "/" + REMAPPER.mapMethodName(className, methodName, methodDesc) + REMAPPER.mapMethodDesc(methodDesc);
 	}
 
-	public static void inspect(Object value, String method) {
-		if (REPORTED.contains(method)) {
-			return;
+	private Mappings loadMappings() {
+		try {
+			return Mappings.load("/assets/nullableeye/srg-mcp.srg");
+		} catch (IOException e) {
+			throw new RuntimeException("Unable to load mappings", e);
 		}
-		Nullability nullability = NULLABLITIES.getOrDefault(method, Nullability.NONNULL);
-		if (!nullability.test(value)) {
-			StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-			nullability.report(method, stackTrace.length > 2 ? stackTrace[2].toString() : "unknown");
-			REPORTED.add(method);
-			NULLABLITIES.remove(method);
+	}
+
+	public static void inspectHook(Object value, String method) {
+		instance().inspect(value, method);
+	}
+
+	private static NullableEyeClassTransformer instance() {
+		if (instance == null) {
+			instance = new NullableEyeClassTransformer();
 		}
+		return instance;
 	}
 
 	private enum Nullability {
 		NULLABLE("Ljavax/annotation/Nullable;", o -> true, (m, c) -> {}),
-		NONNULL("Ljavax/annotation/Nonnull;", Objects::nonNull, (m, c) -> LOGGER.info("{} is nonnull yet returned null at {}", m, c));
+		NONNULL("Ljavax/annotation/Nonnull;", Objects::nonNull, (m, c) -> instance().logger.info("{} is nonnull yet returned null at {}", m, c));
 
 		private static final ImmutableMap<String, Nullability> map;
 
