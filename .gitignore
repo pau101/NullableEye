@@ -1,0 +1,10 @@
+*.launch
+bin/
+.gradle/
+build/
+eclipse/
+out/
+*.iml
+*.ipr
+*.iws
+run/

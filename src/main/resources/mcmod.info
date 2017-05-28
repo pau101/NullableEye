@@ -1,0 +1,14 @@
+[{
+    "modid": "nullableeye",
+    "name": "Nullable Eye",
+    "description": "Records methods which are nullable",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": [ "pau101" ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+}]
