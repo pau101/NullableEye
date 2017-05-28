@@ -50,7 +50,6 @@ public final class NullableEyeClassTransformer implements IClassTransformer {
 		if (bytes == null || !transformedName.startsWith(MINECRAFT_PACKAGE)) {
 			return bytes;
 		}
-		// FMLDeobfuscatingRemapper.INSTANCE
 		ClassNode cls = new ClassNode();
 		ClassReader reader = new ClassReader(bytes);
 		reader.accept(cls, 0);
