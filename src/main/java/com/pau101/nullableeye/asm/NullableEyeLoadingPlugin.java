@@ -1,19 +1,24 @@
-package com.pau101.nullableeye;
+package com.pau101.nullableeye.asm;
 
+import com.pau101.nullableeye.NullableEye;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 
+import java.io.File;
 import java.util.Map;
 
-@IFMLLoadingPlugin.Name(NullableEyeLoadingPlugin.NAME)
+@IFMLLoadingPlugin.Name(NullableEye.NAME)
 @IFMLLoadingPlugin.MCVersion(MinecraftForge.MC_VERSION)
 @IFMLLoadingPlugin.TransformerExclusions("com.pau101.nullableeye.")
 public final class NullableEyeLoadingPlugin implements IFMLLoadingPlugin {
-	public static final String NAME = "Nullable Eye";
+	private static File minecraftDir;
 
 	@Override
 	public String[] getASMTransformerClass() {
-		return new String[] { NullableEyeClassTransformer.class.getName() };
+		return new String[] {
+			RuntimeClassBytesProvider.ClassBytesIntercepter.class.getName(),
+			RuntimeNullityProvider.NullityIntercepter.class.getName()
+		};
 	}
 
 	@Override
@@ -27,10 +32,16 @@ public final class NullableEyeLoadingPlugin implements IFMLLoadingPlugin {
 	}
 
 	@Override
-	public void injectData(Map<String, Object> data) {}
+	public void injectData(Map<String, Object> data) {
+		minecraftDir = (File) data.get("mcLocation");
+	}
 
 	@Override
 	public String getAccessTransformerClass() {
 		return null;
+	}
+
+	public static File getMinecraftDir() {
+		return minecraftDir;
 	}
 }

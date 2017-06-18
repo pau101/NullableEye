@@ -10,7 +10,7 @@ buildscript {
 apply plugin: "net.minecraftforge.gradle.forge"
 
 ext.modVersion = "1.0.0"
-ext.loadingPlugin = "com.pau101.nullableeye.NullableEyeLoadingPlugin"
+ext.loadingPlugin = "com.pau101.nullableeye.asm.NullableEyeLoadingPlugin"
 ext.mappingsChannel = "snapshot"
 ext.mappingsVersion = "20161220"
 ext.modID = "nullableeye"
