@@ -141,12 +141,12 @@ public final class IntelliJNullityAnnotationWriter implements NullityAnnotationW
 	private String getMethodName(Remapper remapper, String className, MethodLocation loc) {
 		StringBuilder nameBldr = new StringBuilder(className).append(' ');
 		String desc = remapper.mapMethodDesc(loc.getDesc());
-		nameBldr.append(Type.getReturnType(desc).getClassName());
-		nameBldr.append(' ');
 		String name = loc.getName();
 		if ("<init>".equals(name)) {
 			nameBldr.append(className.substring(className.lastIndexOf('.') + 1));
 		} else {
+			nameBldr.append(Type.getReturnType(desc).getClassName());
+			nameBldr.append(' ');
 			nameBldr.append(remapper.mapMethodName(loc.getOwner().getName(), name, loc.getDesc()));
 		}
 		nameBldr.append('(');
