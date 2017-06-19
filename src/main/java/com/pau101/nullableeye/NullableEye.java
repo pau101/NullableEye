@@ -1,24 +1,21 @@
 package com.pau101.nullableeye;
 
+import com.pau101.nullableeye.annotation.IntelliJNullityAnnotationWriter;
 import com.pau101.nullableeye.asm.RuntimeClassBytesProvider;
 import com.pau101.nullableeye.asm.RuntimeNullityProvider;
 import com.pau101.nullableeye.config.NullableEyeConfig;
 import com.pau101.nullableeye.config.data.NullableEyeConfigData;
-import com.pau101.nullableeye.inspector.ClassInspection;
-import com.pau101.nullableeye.inspection.Inspection;
-import com.pau101.nullableeye.inspector.MethodInspection;
-import com.pau101.nullableeye.inspection.location.FieldLocation;
-import com.pau101.nullableeye.inspection.location.MethodLocation;
-import com.pau101.nullableeye.inspection.location.ParameterLocation;
 import com.pau101.nullableeye.inspector.Inspector;
+import com.pau101.nullableeye.mappings.Mappings;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.objectweb.asm.commons.Remapper;
 
+import java.io.IOException;
 import java.net.URLClassLoader;
-import java.util.Collection;
-import java.util.Map;
+import java.nio.file.Paths;
 
 @Mod(
 	modid = NullableEye.ID,
@@ -47,30 +44,15 @@ public final class NullableEye {
 	public void init(FMLPostInitializationEvent event) {
 		ClassLoader loader = getClass().getClassLoader();
 		if (loader instanceof URLClassLoader) {
-			inspector.inspect(((URLClassLoader) loader).getURLs());
-			for (ClassInspection inspection : inspector.getInspections()) {
-				Map<FieldLocation, Collection<Inspection<FieldLocation>>> fields =  inspection.getFieldInspections().asMap();
-				Map<MethodLocation, MethodInspection> methods =  inspection.getMethodInspections();
-				if (fields.size() + methods.size() > 1) {
-					LOGGER.info("Class: {}", inspection.getLocation());
-				}
-				for (Map.Entry<FieldLocation, Collection<Inspection<FieldLocation>>> entry : fields.entrySet()) {
-					for (Inspection<FieldLocation> fieldInsp : entry.getValue()) {
-						LOGGER.info(fieldInsp);
-					}
-				}
-				for (Map.Entry<MethodLocation, MethodInspection> entry : methods.entrySet()) {
-					MethodInspection methodInspection = entry.getValue();
-					for (Inspection<MethodLocation> methodInsp : methodInspection.getInspections()) {
-						LOGGER.info(methodInsp);
-					}
-					for (Map.Entry<Integer, Collection<Inspection<ParameterLocation>>> params : methodInspection.getParameterInspections().asMap().entrySet()) {
-						for (Inspection<ParameterLocation> paramInsp : params.getValue()) {
-							LOGGER.info(paramInsp);
-						}
-					}
-				}
+			Remapper remapper;
+			try {
+				remapper = Mappings.load(String.format("/assets/%s/srg-mcp.srg", ID));
+			} catch (IOException e) {
+				LOGGER.info("Unable to load mcp mappings, will output in srg", e);
+				remapper = new Remapper() {};
 			}
+			inspector.inspect(((URLClassLoader) loader).getURLs());
+			new IntelliJNullityAnnotationWriter(LOGGER).write(inspector.getInspections(), remapper, Paths.get("annotations"));
 		} else {
 			LOGGER.warn("Unable to inspect because of unknown class loader \"{}\"", loader.getClass().getName());
 		}

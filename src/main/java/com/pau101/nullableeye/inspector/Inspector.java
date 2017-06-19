@@ -1,6 +1,5 @@
 package com.pau101.nullableeye.inspector;
 
-import com.pau101.nullableeye.Nullity;
 import com.pau101.nullableeye.config.InspectorConfig;
 import com.pau101.nullableeye.inspection.Inspection;
 import com.pau101.nullableeye.inspection.location.ClassLocation;
@@ -14,6 +13,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
@@ -45,11 +45,9 @@ import java.util.function.UnaryOperator;
 public final class Inspector {
 	private static final int CLASSES_INITIAL_CAPACITY = 512;
 
-	private static final int AVERAGE_CLASS_SIZE = 4028; // Computed from 3217 classes in mc 1.11.2 (rounded up from 4014)
-
 	private static final String CLASS_GLOB_PATTERN = "glob:**.class";
 
-	private final FMLDeobfuscatingRemapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
+	private final Remapper remapper = FMLDeobfuscatingRemapper.INSTANCE;
 
 	private final Logger logger;
 
@@ -92,6 +90,10 @@ public final class Inspector {
 
 	public boolean isConsumerInScope(String className) {
 		return config.isConsumerInScope(className);
+	}
+
+	public boolean isConsumerRootInScope(String className) {
+		return config.isConsumerRootInScope(className);
 	}
 
 	public boolean isSupplierInScope(String className) {
@@ -253,7 +255,7 @@ public final class Inspector {
 			if (resolved.getParent() == null) {
 				cont = true;
 			} else {
-				cont = isConsumerInScope(classNameTransformer.apply(getClassName(resolved)));
+				cont = isConsumerRootInScope(classNameTransformer.apply(getClassName(resolved)));
 			}
 			return cont ? FileVisitResult.CONTINUE : FileVisitResult.SKIP_SUBTREE;
 		}

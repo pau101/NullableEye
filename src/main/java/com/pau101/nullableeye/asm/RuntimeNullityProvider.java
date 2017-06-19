@@ -3,7 +3,7 @@ package com.pau101.nullableeye.asm;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.pau101.nullableeye.NullableEye;
-import com.pau101.nullableeye.Nullity;
+import com.pau101.nullableeye.inspector.Nullity;
 import com.pau101.nullableeye.inspection.location.ClassLocation;
 import com.pau101.nullableeye.inspection.location.Location;
 import com.pau101.nullableeye.inspection.location.MethodLocation;

@@ -5,20 +5,13 @@ import com.pau101.nullableeye.inspection.location.Location;
 import java.util.Objects;
 
 public final class Inspection<L extends Location<L>> implements Comparable<Inspection<L>> {
-	private final Discoverer discoverer;
-
 	private final InspectionType inspectionType;
 
 	private final L location;
 
-	public Inspection(Discoverer discoverer, InspectionType inspectionType, L location) {
-		this.discoverer = discoverer;
+	public Inspection(InspectionType inspectionType, L location) {
 		this.inspectionType = inspectionType;
 		this.location = location;
-	}
-
-	public Discoverer getDiscoverer() {
-		return discoverer;
 	}
 
 	public InspectionType getInspectionType() {
@@ -43,12 +36,12 @@ public final class Inspection<L extends Location<L>> implements Comparable<Inspe
 			return false;
 		}
 		Inspection that = (Inspection) o;
-		return discoverer == that.discoverer && inspectionType == that.inspectionType && Objects.equals(location, that.location);
+		return inspectionType == that.inspectionType && Objects.equals(location, that.location);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(discoverer, inspectionType, location);
+		return Objects.hash(inspectionType, location);
 	}
 
 	@Override

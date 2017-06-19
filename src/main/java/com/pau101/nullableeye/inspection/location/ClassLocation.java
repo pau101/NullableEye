@@ -4,7 +4,6 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.Objects;
 
-// TODO: nested classes?
 public final class ClassLocation implements Location<ClassLocation> {
 	private final ClassLocation outer;
 
@@ -14,6 +13,7 @@ public final class ClassLocation implements Location<ClassLocation> {
 		this(null, name);
 	}
 
+	// TODO: nested classes?
 	private ClassLocation(ClassLocation outer, String name) {
 		this.outer = outer;
 		this.name = name;
@@ -22,6 +22,10 @@ public final class ClassLocation implements Location<ClassLocation> {
 	@Override
 	public ClassLocation getOwner() {
 		return outer;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 	@Override

@@ -1,7 +1,5 @@
 package com.pau101.nullableeye.inspector;
 
-import com.pau101.nullableeye.Nullity;
-import com.pau101.nullableeye.inspection.Discoverer;
 import com.pau101.nullableeye.inspection.Inspection;
 import com.pau101.nullableeye.inspection.InspectionType;
 import com.pau101.nullableeye.inspection.location.FieldLocation;
@@ -42,7 +40,7 @@ public final class InspectorInterpreter extends BasicInterpreter {
 			if (value instanceof AnnotatedValue<?>) {
 				AnnotatedValue<?> annotatedValue = (AnnotatedValue<?>) value;
 				if (annotatedValue.nullity == Nullity.NONNULL) {
-					annotatedValue.inspect(Discoverer.STATIC, InspectionType.POSSIBLY_NULLABLE);
+					annotatedValue.inspect(InspectionType.POSSIBLY_NULLABLE);
 				}
 			}
 		} else if (insn.getOpcode() == GETFIELD || insn.getOpcode() == ARRAYLENGTH || insn.getOpcode() == ATHROW) {
@@ -76,12 +74,17 @@ public final class InspectorInterpreter extends BasicInterpreter {
 				}
 			}
 			MethodInsnNode invocation = (MethodInsnNode) insn;
-			if (inspector.isSupplierInScope(invocation)) {
+			if (!isSyntheticAccess(invocation.name) && inspector.isSupplierInScope(invocation)) {
 				MethodLocation loc = inspector.getMappedMethod(invocation);
 				value = new AnnotatedValue<>(value, inspector.getNullity(loc), loc, inspector::recordMethod);
 			}
 		}
 		return value;
+	}
+
+	// TODO: inner class synthetic access accounts for outer class field
+	private boolean isSyntheticAccess(String name) {
+		return name.startsWith("access$");
 	}
 
 	private boolean isNullable(BasicValue value) {
@@ -110,8 +113,8 @@ public final class InspectorInterpreter extends BasicInterpreter {
 			this.recorder = recorder;
 		}
 
-		public void inspect(Discoverer discoverer, InspectionType inspectionType) {
-			recorder.accept(new Inspection<>(discoverer, inspectionType, source));
+		public void inspect(InspectionType inspectionType) {
+			recorder.accept(new Inspection<>(inspectionType, source));
 		}
 	}
 

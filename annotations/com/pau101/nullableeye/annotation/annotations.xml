@@ -1,0 +1,5 @@
+<root>
+    <item name='com.pau101.nullableeye.annotation.IntelliJNullityAnnotationWriter.Foo Foo(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.Nullable'/>
+    </item>
+</root>

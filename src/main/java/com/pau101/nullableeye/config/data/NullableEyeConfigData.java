@@ -50,13 +50,23 @@ public final class NullableEyeConfigData {
 					}
 
 					@Override
+					public boolean isConsumerRootInScope(String className) {
+						for (String name : inspectionScope.consumers) {
+							if (className.startsWith(name.substring(0, Math.min(className.length(), name.length())))) {
+								return true;
+							}
+						}
+						return false;
+					}
+
+					@Override
 					public boolean isSupplierInScope(String className) {
 						return isInScope(className, inspectionScope.suppliers);
 					}
 
 					private boolean isInScope(String target, String[] names) {
 						for (String name : names) {
-							if (target.startsWith(name.substring(0, Math.min(target.length(), name.length())))) {
+							if (target.startsWith(name)) {
 								return true;
 							}
 						}
