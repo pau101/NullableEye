@@ -23,14 +23,8 @@ import java.util.function.Consumer;
 public final class InspectorInterpreter extends BasicInterpreter {
 	private final Inspector inspector;
 
-	private MethodLocation location;
-
 	private InspectorInterpreter(Inspector inspector) {
 		this.inspector = inspector;
-	}
-
-	public void setLocation(MethodLocation location) {
-		this.location = location;
 	}
 
 	@Override
@@ -129,7 +123,7 @@ public final class InspectorInterpreter extends BasicInterpreter {
 
 		@Override
 		protected void init(String owner, MethodNode m) throws AnalyzerException {
-			setLocation(inspector.getRelocatedMethod(inspector.getMappedMethod(owner, m.name, m.desc)));
+			MethodLocation location = inspector.getRelocatedMethod(inspector.getMappedMethod(owner, m.name, m.desc));
 			Frame<BasicValue>[] frames = getFrames();
 			if (frames.length > 0) {
 				Frame<BasicValue> frame = frames[0];

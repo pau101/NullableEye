@@ -167,10 +167,13 @@ public final class Inspector {
 		ClassNode cls = readClass(bytes);
 		logger.info("Analyzing {}...", className);
 		for (MethodNode method : cls.methods) {
-			try {
-				analyzer.analyze(cls.name, method);
-			} catch (Exception e) {
-				logger.warn("Failed to analyze method {}", method.name, e);
+			MethodLocation location = getRelocatedMethod(getMappedMethod(cls.name, method.name, method.desc));
+			if (isSupplierInScope(location)) {
+				try {
+					analyzer.analyze(cls.name, method);
+				} catch (Exception e) {
+					logger.warn("Failed to analyze method {}", method.name, e);
+				}
 			}
 		}
 	}
