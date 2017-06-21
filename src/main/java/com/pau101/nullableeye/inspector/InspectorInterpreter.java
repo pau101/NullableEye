@@ -47,9 +47,11 @@ public final class InspectorInterpreter extends BasicInterpreter {
 			if (isNullable(value)) {
 				recordUnsafeDereference((AnnotatedValue<?>) value);
 			}
-			if (insn.getOpcode() == GETFIELD && inspector.isSupplierInScope((FieldInsnNode) insn)) {
-				FieldLocation field = inspector.getMappedField((FieldInsnNode) insn);
-				valueOut = new AnnotatedValue<>(valueOut, inspector.getNullity(field), field, inspector::recordField);
+			if (insn.getOpcode() == GETFIELD) {
+				FieldLocation field = inspector.getRelocatedField(inspector.getMappedField((FieldInsnNode) insn));
+				if (inspector.isSupplierInScope(field)) {
+					valueOut = new AnnotatedValue<>(valueOut, inspector.getNullity(field), field, inspector::recordField);
+				}
 			}
 		}
 		return valueOut;
@@ -74,9 +76,11 @@ public final class InspectorInterpreter extends BasicInterpreter {
 				}
 			}
 			MethodInsnNode invocation = (MethodInsnNode) insn;
-			if (!isSyntheticAccess(invocation.name) && inspector.isSupplierInScope(invocation)) {
-				MethodLocation loc = inspector.getMappedMethod(invocation);
-				value = new AnnotatedValue<>(value, inspector.getNullity(loc), loc, inspector::recordMethod);
+			if (!isSyntheticAccess(invocation.name)) {
+				MethodLocation method = inspector.getRelocatedMethod(inspector.getMappedMethod(invocation));
+				if (inspector.isSupplierInScope(method)) {
+					value = new AnnotatedValue<>(value, inspector.getNullity(method), method, inspector::recordMethod);
+				}
 			}
 		}
 		return value;
@@ -125,7 +129,7 @@ public final class InspectorInterpreter extends BasicInterpreter {
 
 		@Override
 		protected void init(String owner, MethodNode m) throws AnalyzerException {
-			setLocation(inspector.getMappedMethod(owner, m.name, m.desc));
+			setLocation(inspector.getRelocatedMethod(inspector.getMappedMethod(owner, m.name, m.desc)));
 			Frame<BasicValue>[] frames = getFrames();
 			if (frames.length > 0) {
 				Frame<BasicValue> frame = frames[0];

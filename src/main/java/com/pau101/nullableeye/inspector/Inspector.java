@@ -5,6 +5,7 @@ import com.pau101.nullableeye.inspection.Inspection;
 import com.pau101.nullableeye.inspection.location.ClassLocation;
 import com.pau101.nullableeye.inspection.location.FieldLocation;
 import com.pau101.nullableeye.inspection.location.Location;
+import com.pau101.nullableeye.inspection.location.MemberLocation;
 import com.pau101.nullableeye.inspection.location.MethodLocation;
 import com.pau101.nullableeye.inspection.location.ParameterLocation;
 import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
@@ -57,15 +58,18 @@ public final class Inspector {
 
 	private final NullityProvider nullityProvider;
 
+	private final Relocator relocator;
+
 	private final Map<ClassLocation, ClassInspection> inspections = Collections.synchronizedMap(new TreeMap<>());
 
 	private final InspectorInterpreter.InspectorAnalyzer analyzer = InspectorInterpreter.analyzer(this);
 
-	public Inspector(Logger logger, InspectorConfig config, ClassBytesProvider classBytesProvider, NullityProvider nullityProvider) {
+	public Inspector(Logger logger, InspectorConfig config, ClassBytesProvider classBytesProvider, NullityProvider nullityProvider, Relocator relocator) {
 		this.logger = logger;
 		this.config = config;
 		this.classBytesProvider = classBytesProvider;
 		this.nullityProvider = nullityProvider;
+		this.relocator = relocator;
 	}
 
 	public void recordMethod(Inspection<MethodLocation> inspection) {
@@ -100,16 +104,8 @@ public final class Inspector {
 		return config.isSupplierInScope(className);
 	}
 
-	public boolean isSupplierInScope(MethodInsnNode invocation) {
-		return isInsnOwnerInScope(invocation.owner);
-	}
-
-	public boolean isSupplierInScope(FieldInsnNode access) {
-		return isInsnOwnerInScope(access.owner);
-	}
-
-	private boolean isInsnOwnerInScope(String owner) {
-		return isSupplierInScope(remapper.map(owner).replace('/', '.'));
+	public boolean isSupplierInScope(MemberLocation<?> location) {
+		return isSupplierInScope(location.getOwner().getName().replace('/', '.'));
 	}
 
 	public MethodLocation getMappedMethod(String className, MethodNode method) {
@@ -134,6 +130,13 @@ public final class Inspector {
 
 	public FieldLocation getMappedField(String className, String fieldName, String fieldDesc) {
 		return new FieldLocation(remapper.map(className), remapper.mapFieldName(className, fieldName, fieldDesc));
+	}
+
+	public FieldLocation getRelocatedField(FieldLocation field) {
+		return relocator.relocate(field);
+	}
+	public MethodLocation getRelocatedMethod(MethodLocation method) {
+		return relocator.relocate(method);
 	}
 
 	public Nullity getNullity(Location<?> location) {

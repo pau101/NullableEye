@@ -1,6 +1,7 @@
 package com.pau101.nullableeye;
 
 import com.pau101.nullableeye.annotation.IntelliJNullityAnnotationWriter;
+import com.pau101.nullableeye.asm.MemberPatchRelocator;
 import com.pau101.nullableeye.asm.RuntimeClassBytesProvider;
 import com.pau101.nullableeye.asm.RuntimeNullityProvider;
 import com.pau101.nullableeye.config.NullableEyeConfig;
@@ -36,7 +37,7 @@ public final class NullableEye {
 
 	private final NullableEyeConfig config = NullableEyeConfigData.create();
 
-	private final Inspector inspector = new Inspector(LOGGER, config.getInspectorConfig(), RuntimeClassBytesProvider.instance(), RuntimeNullityProvider.instance());
+	private final Inspector inspector = new Inspector(LOGGER, config.getInspectorConfig(), RuntimeClassBytesProvider.instance(), RuntimeNullityProvider.instance(), MemberPatchRelocator.instance());
 
 	private NullableEye() {}
 

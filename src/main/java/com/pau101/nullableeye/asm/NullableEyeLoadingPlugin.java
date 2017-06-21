@@ -16,6 +16,7 @@ import java.util.Map;
 @IFMLLoadingPlugin.Name(NullableEye.NAME)
 @IFMLLoadingPlugin.MCVersion(MinecraftForge.MC_VERSION)
 @IFMLLoadingPlugin.TransformerExclusions("com.pau101.nullableeye.")
+@IFMLLoadingPlugin.SortingIndex(1000000)
 public final class NullableEyeLoadingPlugin implements IFMLLoadingPlugin {
 	private static File minecraftDir;
 
