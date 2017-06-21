@@ -16,6 +16,7 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -112,6 +113,10 @@ public final class Inspector {
 		return isSupplierInScope(remapper.map(owner).replace('/', '.'));
 	}
 
+	public MethodLocation getMappedMethod(String className, MethodNode method) {
+		return getMappedMethod(className, method.name, method.desc);
+	}
+
 	public MethodLocation getMappedMethod(MethodInsnNode methodInsn) {
 		return getMappedMethod(methodInsn.owner, methodInsn.name, methodInsn.desc);
 	}
@@ -120,8 +125,12 @@ public final class Inspector {
 		return new MethodLocation(remapper.map(className), remapper.mapMethodName(className, methodName, methodDesc), remapper.mapMethodDesc(methodDesc));
 	}
 
-	public FieldLocation getMappedField(FieldInsnNode methodInsn) {
-		return getMappedField(methodInsn.owner, methodInsn.name, methodInsn.desc);
+	public FieldLocation getMappedField(String className, FieldNode field) {
+		return getMappedField(className, field.name, field.desc);
+	}
+
+	public FieldLocation getMappedField(FieldInsnNode access) {
+		return getMappedField(access.owner, access.name, access.desc);
 	}
 
 	public FieldLocation getMappedField(String className, String fieldName, String fieldDesc) {

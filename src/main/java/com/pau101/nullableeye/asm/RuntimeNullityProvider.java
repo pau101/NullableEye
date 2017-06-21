@@ -3,11 +3,11 @@ package com.pau101.nullableeye.asm;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.pau101.nullableeye.NullableEye;
-import com.pau101.nullableeye.inspector.Nullity;
 import com.pau101.nullableeye.inspection.location.ClassLocation;
 import com.pau101.nullableeye.inspection.location.Location;
 import com.pau101.nullableeye.inspection.location.MethodLocation;
 import com.pau101.nullableeye.inspector.Inspector;
+import com.pau101.nullableeye.inspector.Nullity;
 import com.pau101.nullableeye.inspector.NullityProvider;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -70,7 +70,7 @@ public final class RuntimeNullityProvider implements NullityProvider {
 		return instance;
 	}
 
-	public static final class NullityIntercepter implements IClassTransformer {
+	public static final class NullityInterceptor implements IClassTransformer {
 		private final Inspector inspector = NullableEye.instance().getInspector();
 
 		private final RuntimeNullityProvider provider = instance();

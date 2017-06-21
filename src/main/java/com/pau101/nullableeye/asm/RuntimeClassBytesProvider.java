@@ -57,7 +57,7 @@ public final class RuntimeClassBytesProvider implements ClassBytesProvider {
 		return instance;
 	}
 
-	public static final class ClassBytesIntercepter implements IClassTransformer {
+	public static final class ClassBytesInterceptor implements IClassTransformer {
 		private final RuntimeClassBytesProvider provider = instance();
 
 		@Override

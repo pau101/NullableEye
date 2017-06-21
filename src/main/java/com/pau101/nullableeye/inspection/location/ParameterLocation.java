@@ -30,6 +30,10 @@ public final class ParameterLocation implements Location<ParameterLocation> {
 		return new ParameterLocation(method.withOwner(cls), index);
 	}
 
+	public ParameterLocation withMethod(MethodLocation method) {
+		return new ParameterLocation(method, index);
+	}
+
 	@Override
 	public String toString() {
 		return method.toString() + " " + index;

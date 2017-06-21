@@ -38,8 +38,8 @@ public abstract class MemberLocation<T extends MemberLocation<T>> implements Loc
 		if (!(o instanceof MemberLocation<?>)) {
 			return false;
 		}
-		MemberLocation<?> that = (MemberLocation<?>) o;
-		return Objects.equals(owner, that.owner) && Objects.equals(name, that.name);
+		MemberLocation<?> other = (MemberLocation<?>) o;
+		return Objects.equals(owner, other.owner) && Objects.equals(name, other.name);
 	}
 
 	@Override
