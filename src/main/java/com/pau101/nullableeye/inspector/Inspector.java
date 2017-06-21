@@ -7,7 +7,6 @@ import com.pau101.nullableeye.inspection.location.FieldLocation;
 import com.pau101.nullableeye.inspection.location.Location;
 import com.pau101.nullableeye.inspection.location.MethodLocation;
 import com.pau101.nullableeye.inspection.location.ParameterLocation;
-import net.minecraft.world.World;
 import net.minecraftforge.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.Logger;
@@ -174,9 +173,14 @@ public final class Inspector {
 	}
 
 	private Set<String> getClasses(URL[] urls) {
-		URI minecraftSource = getClassSource(World.class);
-		Set<String> classes = new HashSet<>(CLASSES_INITIAL_CAPACITY);
 		logger.info("Searching for classes...");
+		URI minecraftSource = getClassSource("net/minecraft/server/MinecraftServer.class");
+		if (minecraftSource == null) {
+			logger.warn("Unable not locate Minecraft code source, no deobf will be performed");
+		} else {
+			logger.info("Minecraft code source detected as {}", minecraftSource);
+		}
+		Set<String> classes = new HashSet<>(CLASSES_INITIAL_CAPACITY);
 		for (URL url : urls) {
 			URI uri = URI.create(url.toString());
 			UnaryOperator<String> classNameTransformer;
@@ -197,10 +201,18 @@ public final class Inspector {
 		return classes;
 	}
 
-	private URI getClassSource(Class<?> context) {
-		String rawName = context.getName();
-		String uri = context.getResource(rawName.substring(rawName.lastIndexOf('.') + 1) + ".class").toString();
-		return URI.create(uri.substring(0, uri.indexOf('!')));
+	private URI getClassSource(String resource) {
+		URL res = getClass().getClassLoader().getResource(resource);
+		if (res == null) {
+			return null;
+		}
+		String resStr = res.toString();
+		String uri = resStr.substring(0, resStr.indexOf('!'));
+		final String jarPrefix = "jar:";
+		if (uri.startsWith(jarPrefix)) {
+			uri = uri.substring(jarPrefix.length());
+		}
+		return URI.create(uri);
 	}
 
 	private void getClasses(Path path, UnaryOperator<String> classNameTransformer, Set<String> classes) {
@@ -264,7 +276,7 @@ public final class Inspector {
 			if (resolved.getParent() == null) {
 				cont = true;
 			} else {
-				cont = isConsumerRootInScope(classNameTransformer.apply(getClassName(resolved)));
+				cont = isConsumerRootInScope(classNameTransformer.apply(getClassName(resolved)).replace('/', '.'));
 			}
 			return cont ? FileVisitResult.CONTINUE : FileVisitResult.SKIP_SUBTREE;
 		}
@@ -272,7 +284,7 @@ public final class Inspector {
 		@Override
 		public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 			if (classMatcher.matches(file)) {
-				String clazz = classNameTransformer.apply(FilenameUtils.removeExtension(getClassName(pathResolver.apply(file))));
+				String clazz = classNameTransformer.apply(FilenameUtils.removeExtension(getClassName(pathResolver.apply(file)))).replace('/', '.');
 				if (isConsumerInScope(clazz)) {
 					classes.add(clazz);
 				}
@@ -283,7 +295,7 @@ public final class Inspector {
 		private String getClassName(Path path) {
 			String str = path.toString();
 			String sep = path.getFileSystem().getSeparator();
-			return str.substring(str.indexOf(sep) + sep.length()).replace(sep, ".");
+			return str.substring(str.indexOf(sep) + sep.length()).replace(sep, "/");
 		}
 	}
 }

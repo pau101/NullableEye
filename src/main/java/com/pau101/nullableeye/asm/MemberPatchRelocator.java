@@ -8,7 +8,6 @@ import com.pau101.nullableeye.inspection.location.ParameterLocation;
 import com.pau101.nullableeye.inspector.Inspector;
 import com.pau101.nullableeye.inspector.Relocator;
 import net.minecraft.launchwrapper.IClassTransformer;
-import net.minecraftforge.fml.common.asm.transformers.PatchingTransformer;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -85,17 +84,12 @@ public final class MemberPatchRelocator implements Relocator {
 					MemberSet transformedMembers = getMembers(bytes);
 					ClassLocation owner = new ClassLocation(packageLocation + transformedName);
 					transformedMembers.fields.removeAll(members.fields);
-					if (transformer instanceof PatchingTransformer && transformedMembers.fields.size() > 0) {
-						NullableEye.getLogger().info(transformedMembers.fields);
-					}
 					for (FieldLocation field : transformedMembers.fields) {
 						catcher.put(field, field.withOwner(owner));
-						//NullableEye.getLogger().info(field);
 					}
 					transformedMembers.methods.removeAll(members.methods);
 					for (MethodLocation method : transformedMembers.methods) {
 						catcher.put(method, method.withOwner(owner));
-						//NullableEye.getLogger().info(method);
 					}
 				}
 				return bytes;
